@@ -207,3 +207,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 
 16. To clean up the resources provisioned to AWS, go back to VS code and enter `terraform destroy` to the terminal. Enter `yes` after the corresponding prompt.
 17. Go back to AWS dashboard and ensure the `Instance State` is  displayed as `Terminated`. If the instance remains displayed as `Terminated` after several hours, check this [article](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesShuttingDown.html#terminated-instance-still-displaying).
+
+
+
+For any issues encountered, open an issue under this repository's `Issues` tab.
