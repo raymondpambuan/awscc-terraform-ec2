@@ -11,6 +11,8 @@ Terraform Lorem Ipsum
 3. [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
    - Verify installation using `terraform -help` in any terminal.
 4. AWS Account (Preferrably an admin IAM Account)
+5. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+   - Verify with `aws --version` in Command Prompt
    
 ## 🎯 Objectives
 1. Setting Up Environment and AWS Credentials
@@ -45,6 +47,11 @@ provider "aws" {
 8. Select `Command Line Interface` for key type, check the confirmation box, and click `Next`.
 9. Name it `terraform-key`, then click `Create`.
 10. Copy both keys and store them in a notepad.
+11. For secure local credential set up, enter `aws configure` and fill up the following sequentially:
+    - `[YOUR ACCESS KEY]`
+    - `[YOUR SECRET KEY]`
+    - `ap-southeast-1`
+    - `json`
 
 ## Part 2: Writing Terraform Code for EC2 Provisioning
 1. In `main.tf`, add `access_key` and `secret_key` parameters under the `provider` block with your corresponding keys.
