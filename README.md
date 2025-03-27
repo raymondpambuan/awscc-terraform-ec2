@@ -1,17 +1,18 @@
 # 🖥️ IaC: Terraform with EC2 ⌨️
 
-Terraform Lorem Ipsum
+**Terraform** is an open-source Infrastructure as Code (IaC) tool developed by HashiCorp. It enables users to define, provision, and manage infrastructure using a declarative configuration language (HCL). Terraform is widely used for cloud automation, DevOps workflows, and infrastructure scaling. 🚀
 
 **Disclaimer:** This activity uses Windows 10/11 OS.
 
 ## 📋 Requirements
 1. [VS Code](https://code.visualstudio.com/download)
-2. [Git Bash](https://git-scm.com/downloads) or [SSH for PowerShell](https://www.ionos.com/digitalguide/server/configuration/powershell-ssh/)
+   - (Optional) Extensions: HashiCorp Terraform, Prettier
+3. [Git Bash](https://git-scm.com/downloads) or [SSH for PowerShell](https://www.ionos.com/digitalguide/server/configuration/powershell-ssh/)
    - *Note: Git Bash has a built-in SSH, while PowerShell does not.*
-3. [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
+4. [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
    - Verify installation using `terraform -help` in any terminal.
-4. AWS Account (Preferrably an admin IAM Account)
-5. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+5. AWS Account (Preferrably an admin [IAM Account](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html))
+6. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
    - Verify with `aws --version` in Command Prompt
    
 ## 🎯 Objectives
@@ -33,38 +34,36 @@ terraform {
   }
 }
 
-# Configure the AWS Provider
-provider "aws" {
-  region = "ap-southeast-1"
+provider "aws" { 
+   region     = "ap-southeast-1"   
 }
 </pre>
 
-3. Run the command `terraform init` using the terminal.
+3. Run the command `terraform init` using the terminal to initialize Terraform in the current working directory.
 4. Log in to your AWS console and navigate to `IAM`.
-5. Create an IAM User named `terraform-admin`.
-6. Attach the policy `AdministratorAccess`, then click `Create user`.
-7. Select the created user and navigate to `Security Credentials` tab. Under `Access Keys`, click `Create Access Key`.
-8. Select `Command Line Interface` for key type, check the confirmation box, and click `Next`.
-9. Name it `terraform-key`, then click `Create`.
-10. Copy both keys and store them in a notepad.
-11. For secure local credential set up, enter `aws configure` and fill up the following sequentially:
+
+![image](https://github.com/user-attachments/assets/f5c34477-3196-4d2f-a51d-7d1b8bb434bf)
+
+6. Create an IAM User named `terraform-admin`.
+7. Attach the policy `AdministratorAccess` directly, or add user to a group if you have an existing group with `AdministratorAccess`. Then, click `Next` and `Create User`.
+8. Select the created user and navigate to `Security Credentials` tab. Under `Access Keys`, click `Create Access Key`.
+9. Select `Command Line Interface` for use case, check the confirmation box, and click `Next`.
+10. Name it `terraform-key`, then click `Create`.
+11. Copy both keys and store them in a notepad. You can also download the `.csv`.
+12. For secure local credential set up, enter `aws configure` in a terminal and fill up the following sequentially:
     - `[YOUR ACCESS KEY]`
     - `[YOUR SECRET KEY]`
     - `ap-southeast-1`
     - `json`
 
 ## Part 2: Writing Terraform Code for EC2 Provisioning
-1. In `main.tf`, add `access_key` and `secret_key` parameters under the `provider` block with your corresponding keys.
+1. In `main.tf`, under the `provider` block, remove the region parameter since it is already configured in your AWS CLI. With the same reason, the access keys will not be added here.
 
 <pre>
-provider "aws" {
-  region     = "ap-southeast-1"
-  access_key = "[YOUR ACCESS KEY]"
-  secret_key = "[YOUR SECRET KEY]"
-}
+provider "aws" { }
 </pre>
 
-2. Copy the [RSA resource](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) block and paste it to `main.tf`. Rename the object to `rsa_4096`.
+2. Copy the [RSA resource](https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key) block and paste it to `main.tf`. This is to set up the keys for SSH connection.
 
 <pre>
 resource "tls_private_key" "rsa_4096" {
@@ -73,8 +72,18 @@ resource "tls_private_key" "rsa_4096" {
 }
 </pre>
 
-3. Create a variable block: `variable "key_name" {}`.
-4. Copy the [AWS key pair](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) block and paste it to `main.tf`. Change `deployer` to `key_pair`, `key_name` value to `var.key_name` and `public_key` value to `tls_private_key.rsa_4096.public_key_openssh`
+3. Create a new file named `variables.tf` to isolate the variables and follow the recommended code practice.
+4. Create a variable block for the key_name of the PEM file for SSH connection key authentication.
+
+<pre>
+variable "key_name" {
+  type        = string
+  description = "Name of the key pair"
+}
+</pre>
+
+5. Create a new file named `terraform.tfvars` to set the actual values of the variables. Add a line for `key_name` and set it as `"instance_pem"`.
+6. Copy the [AWS key pair](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) block and paste it to `main.tf`. A variable reference `var.` is now used for readability and modularity.
 
 <pre>
 resource "aws_key_pair" "key_pair" {
@@ -83,7 +92,7 @@ resource "aws_key_pair" "key_pair" {
 }
 </pre>
 
-5. Create a local file for the private key.
+7. Create a local file for the private key. This allows SSH access as it serves as authentication keys.
 
 <pre>
 resource "local_file" "private_key" {
@@ -92,40 +101,86 @@ resource "local_file" "private_key" {
 }
 </pre>
 
-6. Create an [AWS instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) block for the EC2 instance. Rename the object name to `public_instance`.
-commment: consider ami lookup^^
+8. In `variables.tf`, add variables for EC2 provisioning, namely `ami` for the Amazon Machine Image to be used for the instance, `instance_type` for the type of instance to be launched, and `instance_name` for the name of the instance.
+
+<pre>
+variable "ami" {
+  type        = string
+  description = "Value of the AMI to use for the instance"
+}
+
+variable "instance_type" {
+  type        = string
+  description = "Type of instance to launch"
+}
+
+variable "instance_name" {
+  type        = string
+  description = "Name of the instance"
+}
+</pre>
+
+9. In `terraform.tfvars`, set the new variables' values. For `ami`, we will use the latest version of Amazon Linux 2023, with value `"ami-06661384e66f2da0e"`. For `instance_type`, `"t2.micro"` will be used. For `instance_name`, use `"public_instance"`.
+10. Now, in `main.tf`, create an [AWS instance](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance) block for the EC2 instance.
+
 <pre>
 resource "aws_instance" "public_instance" {
-  ami           = "ami-0672fd5b9210aa093"
-  instance_type = "t2.micro"
-  key_name      = aws_key_pair.key_pair.key_name
-
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  key_name               = aws_key_pair.key_pair.key_name
+   
   tags = {
-    Name = "public_instance"
+    Name = var.instance_name
   }
+}
+</pre>
+
+11. To access the instance with SSH, a [security group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/security_group) block must be created. Add the following blocks to allow SSH connection.
+
+<pre>
+resource "aws_security_group" "ssh_access" {
+  name = "ssh_access"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ssh" {
+  security_group_id = aws_security_group.ssh_access.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
 }
 </pre>
 
 ## Part 3: Running Terraform and Verifying EC2 with SSH
 1. Run `terraform init` in the terminal.
-2. Run `terraforrm plan` and enter a value for `key_name` using the format `[nickname]_pem`
+2. Run `terraforrm plan` and observe the output. It should display the infrastructure resources to be created, changed, or destroyed.
 3. Run `terraform validate` to check for validity.
-4. Run `terraform apply` to run the configured EC2 instance, and if prompted, enter the value set for `key_name`. If prompted again, enter `yes` and wait. **Screenshot the output**.
+4. Run `terraform apply` to run the configured EC2 instance. If prompted for approval, enter `yes` and wait. **Screenshot the output**.
 5. To verify if the EC2 instance is launched, go to your AWS console, navigate to `EC2`. It should be shown under the `Instances` dashboard, refresh if needed. **Screenshot the page**.
-6. Click `Instance` and go to `Security` > `Security Groups`. Check the existing rule. Notice there is not rule for SSH connection.
-7. Go back to `main.tf` in VS Code. Add a block for rule type SSH and source to 0.0.0.0/0.
-8. Obtain the file path of the `PEM` file.
+6. Obtain the file path of the `PEM` file.
    - Using Git Bash in VS Code: `readlink -f [filename]`
    - Using VS Code GUI: right-click the file in the `Explorer` tab and select `Copy Path`.
-9. (For Windows if sudo disabled) Go to Settings > System > For developers > set Enable sudo On.
-10. Initiate an SSH connection into the instance.
-   - Using Git Bash:`sudo ssh -i [FILE_PATH_OF_PEM] ubuntu@[Public_IPv4_DNS_EC2Instance]`
-    Example: `sudo ssh -i /c/Users/Raymond/Projects/iac-terraform/ec2/mon_pem ubuntu@ec2-234-567-891-011.ap-southeast-1.compute.amazonaws.com`
-   - Using PowerShell: `ssh -i [FILE_PATH_OF_PEM] ubuntu@[Public_IPv4_DNS_EC2Instance]`
-   Example: `ssh -i C:\Users\Raymond\Projects\iac-terraform\ec2\mon_pem ubuntu@ec2-122-248-228-101.ap-southeast-1.compute.amazonaws.com`
-11. To verify if you are already in an SSH session, the CLI should be similar to `ubuntu@ip-123-45-67-891:~$`
-12. Install net-tools by entering `sudo apt install net-tools`.
-13. After a successful install, enter `ifconfig` to get the private ip address.
-14. Check if the private IPv4 address is the same with the one displayed in the AWS EC2 instance dashboard. Take a **screenshot** with the terminal and AWS dashboard side-by-side.
-15. Go back to VS code, enter `terraform destroy` to the terminal. Enter the `PEM` filename earlier, then enter `yes` after the corresponding prompts.
-16. Go back to AWS dashboard and ensure the `Instance State` is  displayed as `Terminated`. If the instance remains displayed as `Terminated` after several hours, check this [article](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesShuttingDown.html#terminated-instance-still-displaying).
+7. (For Windows if sudo disabled) Go to Settings > System > For developers > set Enable sudo On.
+8. Initiate an SSH connection into the instance.
+   - Using Git Bash:`sudo ssh -i [FILE_PATH_OF_PEM] ubuntu@[Public_IPv4_EC2Instance]`
+    Example: `sudo ssh -i /c/Users/Raymond/Projects/iac-terraform/ec2/mon_pem ubuntu@234.567.891.011`
+   - Using PowerShell: `ssh -i [FILE_PATH_OF_PEM] ubuntu@[Public_IPv4_EC2Instance]`
+    Example: `ssh -i C:\Users\Raymond\Projects\iac-terraform\ec2\mon_pem ubuntu@234.567.891.011`
+9. To verify if you are already in an SSH session, the CLI should be similar to `ubuntu@ip-123-45-67-891:~$`
+10. Install `net-tools` by entering `sudo apt install net-tools`. Notice that the install will timeout. This is due to a lacking security group rule for outbound connections. Enter `logout` to the SSH session CLI.
+11. Go back to VS Code, in `main.tf`, add a security group egress rule block to allow any access for outbound connections from the EC2 instance.
+
+<pre>
+resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
+  security_group_id = aws_security_group.ssh_access.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1" # semantically equivalent to all ports
+}
+</pre>
+
+12. Since there were updates to the infrastructure, we need to perform `terraform apply` again. Enter `terraform plan`, `terraform validate`, and `terraform apply` sequentially. Once the updates are applied, initiate an SSH session again using the commands from Step 8.
+13. Attempt to install `net-tools` again by entering `sudo apt install net-tools`.
+14. After a successful install, enter `ifconfig` to get the private ip address.
+15. Verify if the private IPv4 address is the same with the one displayed in the AWS EC2 instance dashboard. Take a **screenshot** with the terminal and AWS dashboard side-by-side.
+16. To clean up the resources provisioned to AWS, go back to VS code and enter `terraform destroy` to the terminal. Enter `yes` after the corresponding prompt.
+17. Go back to AWS dashboard and ensure the `Instance State` is  displayed as `Terminated`. If the instance remains displayed as `Terminated` after several hours, check this [article](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/TroubleshootingInstancesShuttingDown.html#terminated-instance-still-displaying).
