@@ -179,15 +179,16 @@ output "instance_public_ip" {
 
 ![image](https://github.com/user-attachments/assets/c0c700bb-8f1e-437b-a667-6904be32f635)
 
-8. Initiate an SSH connection into the instance.
+8. Initiate an SSH connection into the instance. 
    - Using Git Bash:`sudo ssh -i [FILE_PATH_OF_PEM] ubuntu@[Public_IPv4_EC2Instance]`
     Example: `sudo ssh -i /c/Users/Raymond/Projects/iac-terraform/ec2/mon_pem ubuntu@234.567.891.011`
    - Using PowerShell: `ssh -i [FILE_PATH_OF_PEM] ubuntu@[Public_IPv4_EC2Instance]`
     Example: `ssh -i C:\Users\Raymond\Projects\iac-terraform\ec2\mon_pem ubuntu@234.567.891.011`
    - *Note: "user@" depends on AMI selected (e.g. ec2-user default for Amazon Linux 2023)*
-9. To verify if you are already in an SSH session, the CLI should be similar to `user@ip-123-45-67-891:~$`
-10. Install `net-tools` by entering `sudo apt install net-tools`. Notice that the install will timeout. This is due to a lacking security group rule for outbound connections. Enter `logout` to the SSH session CLI.
-11. Go back to VS Code, in `main.tf`, add a security group egress rule block to allow any access for outbound connections from the EC2 instance. (Optional: Set `"0.0.0.0/0"` as a Terraform variable)
+9. (For Devices with Multiple Users) You might encounter errors regarding the PEM file. Check this [article](https://superuser.com/questions/1296024/windows-ssh-permissions-for-private-key-are-too-open) first.
+10. To verify if you are already in an SSH session, the CLI should be similar to `user@ip-123-45-67-891:~$`
+11. Install `net-tools` by entering `sudo apt install net-tools`. Notice that the install will timeout. This is due to a lacking security group rule for outbound connections. Enter `logout` to the SSH session CLI.
+12. Go back to VS Code, in `main.tf`, add a security group egress rule block to allow any access for outbound connections from the EC2 instance. (Optional: Set `"0.0.0.0/0"` as a Terraform variable)
 
 <pre>
 resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
