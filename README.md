@@ -22,7 +22,7 @@
 
 ## Part 1: Setting Up Environment and AWS Credentials
 1. Create a folder named `awscc-iac-terraform` in your preferred directory and open it with VS Code.
-2. Create a file `main.tf` and copy the [provider code](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) below as its initial content.
+2. Create a file `main.tf` and copy the [provider code](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) below as its initial content. 
 
 <pre>
 terraform {
@@ -39,7 +39,7 @@ provider "aws" {
 }
 </pre>
 
-3. Run the command `terraform init` using the terminal to initialize Terraform in the current working directory.
+3. Save and run the command `terraform init` using the terminal to initialize Terraform in the current working directory.
 4. Log in to your AWS console and navigate to `IAM`.
 
 ![image](https://github.com/user-attachments/assets/f5c34477-3196-4d2f-a51d-7d1b8bb434bf)
@@ -162,7 +162,7 @@ output "instance_public_ip" {
 </pre>
 
 ## Part 3: Running Terraform and Verifying EC2 with SSH
-1. Run `terraform init` in the terminal.
+1. Save and run `terraform init` in the terminal.
 2. Run `terraforrm plan` and observe the output. It should display the infrastructure resources to be created, changed, or destroyed.
 3. Run `terraform validate` to check for validity.
 4. Run `terraform apply` to run the configured EC2 instance and other AWS resources. If prompted for approval, enter `yes` and wait.
@@ -198,7 +198,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 }
 </pre>
 
-12. Since there were updates to the infrastructure, we need to perform `terraform apply` again. Enter `terraform plan`, `terraform validate`, and `terraform apply` sequentially. Once the updates are applied, initiate an SSH session again using the commands from Step 8.
+12. Since there were updates to the infrastructure, we need to perform `terraform apply` again. Save and enter `terraform plan`, `terraform validate`, and `terraform apply` sequentially. Once the updates are applied, initiate an SSH session again using the commands from Step 8.
 13. Attempt to install `net-tools` again by entering `sudo apt install net-tools`.
 14. After a successful install, enter `ifconfig` to get the private IPv4 address.
 15. Verify if the private IPv4 address is the same with the one displayed in the AWS EC2 instance dashboard. Take a **screenshot** with the terminal and AWS dashboard side-by-side. Log out of the SSH session once done.
