@@ -151,11 +151,20 @@ resource "aws_vpc_security_group_ingress_rule" "ssh" {
 }
 </pre>
 
+12. To immediately obtain the public IPv4 address of the EC2 instance, we can set it in `outputs.tf`. Create a new file named as `outputs.tf` and add the corresponding block.
+
+<pre>
+output "instance_public_ip" {
+  description = "Public IP address of the EC2 instance"
+  value       = aws_instance.public_instance.public_ip
+}
+</pre>
+
 ## Part 3: Running Terraform and Verifying EC2 with SSH
 1. Run `terraform init` in the terminal.
 2. Run `terraforrm plan` and observe the output. It should display the infrastructure resources to be created, changed, or destroyed.
 3. Run `terraform validate` to check for validity.
-4. Run `terraform apply` to run the configured EC2 instance. If prompted for approval, enter `yes` and wait. **Screenshot the output**.
+4. Run `terraform apply` to run the configured EC2 instance and other AWS resources. If prompted for approval, enter `yes` and wait. **Screenshot the output**.
 5. To verify if the EC2 instance is launched, go to your AWS console, navigate to `EC2`. It should be shown under the `Instances` dashboard, refresh if needed. **Screenshot the page**.
 6. Obtain the file path of the `PEM` file.
    - Using Git Bash in VS Code: `readlink -f [filename]`
