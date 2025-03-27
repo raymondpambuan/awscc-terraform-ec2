@@ -82,7 +82,7 @@ variable "key_name" {
 }
 </pre>
 
-5. Create a new file named `terraform.tfvars` to set the actual values of the variables. Add a line for `key_name` and set it as `"instance_pem"`.
+5. Create a new file named `terraform.tfvars` to set the actual values of the variables. Add a line for `key_name` and set it as `"instance_pem"`. (e.g. `key_name = instance_pem`)
 6. Copy the [AWS key pair](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/key_pair) block and paste it to `main.tf`. A variable reference `var.` is now used for modularity.
 
 <pre>
